@@ -22,6 +22,7 @@ RCT_EXPORT_METHOD(encrypt:(NSString *)string
 {
     if ([[SecurityUtil encryptAESData:string app_key:key gIv:gIv] length] <= 0) {
         reject(@"ERROR", @"decrypt failed", nil);
+        return;
     }
     resolve ([SecurityUtil encryptAESData:string app_key:key gIv:gIv]);
 }
@@ -34,6 +35,7 @@ RCT_EXPORT_METHOD(decrypt:(NSString *)string
 {
     if ([[SecurityUtil decryptAESNString:string app_key:key gIv:gIv] length] <= 0) {
         reject(@"ERROR", @"decrypt failed", nil);
+        return;
     }
     resolve ([SecurityUtil decryptAESNString:string app_key:key gIv:gIv]);
 }
