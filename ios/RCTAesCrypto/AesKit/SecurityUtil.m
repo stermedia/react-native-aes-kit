@@ -13,6 +13,7 @@
 #import "SecurityUtil.h"
 #import "GTMBase64.h"
 #import "NSData+AES.h"
+#import <CommonCrypto/CommonCryptor.h>
 
 
 @implementation SecurityUtil
@@ -71,6 +72,40 @@
     return str;
 }
 
+
++ (NSData *)AES128DecryptData:(NSData*)data key:(NSString *)key gIv:(NSString *)gIv {//解密
+    char keyPtr[kCCKeySizeAES128+1];
+    bzero(keyPtr, sizeof(keyPtr));
+    [key getCString:keyPtr maxLength:sizeof(keyPtr) encoding:NSUTF8StringEncoding];
+    
+    char ivPtr[kCCKeySizeAES128+1];
+    memset(ivPtr, 0, sizeof(ivPtr));
+    [gIv getCString:ivPtr maxLength:sizeof(ivPtr) encoding:NSUTF8StringEncoding];
+    
+    NSUInteger dataLength = [data length];
+    size_t bufferSize = dataLength + kCCBlockSizeAES128;
+    void *buffer = malloc(bufferSize);
+    size_t numBytesDecrypted = 0;
+    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt,
+                                          kCCAlgorithmAES128,
+                                          kCCOptionPKCS7Padding,
+                                          keyPtr,
+                                          kCCBlockSizeAES128,
+                                          ivPtr,
+                                          [data bytes],
+                                          dataLength,
+                                          buffer,
+                                          bufferSize,
+                                          &numBytesDecrypted);
+    if (cryptStatus == kCCSuccess) {
+        NSData* data123= [NSData dataWithBytesNoCopy:buffer length:numBytesDecrypted];
+        return data123;
+    }
+    free(buffer);
+    return nil;
+}
+
+
 // 将带密码的string转成string 解密
 +(NSString*)decryptAESNString:(NSString *)str app_key:(NSString *)key gIv:(NSString *)gIv
 {
@@ -81,7 +116,7 @@
 //    NSData *decryStr = [data AES128DecryptWithKey:key];
 //    NSString *decryptStr = [[NSString alloc] initWithData:decryStr encoding:NSUTF8StringEncoding];
     
-    NSData *decryData = [EncryptData1 AES128DecryptWithKey:key gIv:gIv];
+    NSData *decryData = [SecurityUtil AES128DecryptData:EncryptData1 key:key gIv:gIv];
     //将解了密码的nsdata转化为nsstring
     NSString *decryptStr = [[NSString alloc] initWithData:decryData encoding:NSUTF8StringEncoding];
     
